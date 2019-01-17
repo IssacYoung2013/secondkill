@@ -1,0 +1,34 @@
+package com.issac.seckill.redis;
+
+/**
+ *
+ * author:  ywy
+ * date:    2019-01-17
+ * desc:
+ */
+public abstract class BasePrefix implements KeyPrefix {
+
+    private int expireSeconds;
+
+    private String prefix;
+
+    public BasePrefix(String prefix) {
+        this(0,prefix);
+    }
+
+    public BasePrefix(int expireSeconds, String prefix) {
+        this.expireSeconds = expireSeconds;
+        this.prefix = prefix;
+    }
+
+    @Override
+    public int expireSeconds() { // 默认 0 代表永不过期
+        return expireSeconds;
+    }
+
+    @Override
+    public String getPrefix() {
+        String className = getClass().getSimpleName();
+        return className + prefix;
+    }
+}
