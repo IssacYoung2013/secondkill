@@ -57,30 +57,31 @@ public class SecUserService {
         if (!calcPass.equals(dbPass)) {
             throw new GlobleException(CodeMsg.PASSWORD_ERROR);
         }
+        String token = UUIDUtil.uuid();
+
         // 生成cookie
-        addCookie(response,user);
+        addCookie(response, token, user);
 
         return true;
     }
 
     public SecUser getByToken(HttpServletResponse response, String token) {
-        if(StringUtils.isEmpty(token)) {
+        if (StringUtils.isEmpty(token)) {
             return null;
         }
-        SecUser user = redisService.get(SecUserKey.token,token,SecUser.class);
+        SecUser user = redisService.get(SecUserKey.token, token, SecUser.class);
         // 延长有效期
-        if(user != null) {
-            addCookie(response, user);
+        if (user != null) {
+            addCookie(response, token, user);
         }
         return user;
     }
 
-    private void addCookie(HttpServletResponse response,SecUser user) {
+    private void addCookie(HttpServletResponse response, String token, SecUser user) {
         // 生成cookie
-        String token = UUIDUtil.uuid();
-        redisService.set(SecUserKey.token,token,user);
+        redisService.set(SecUserKey.token, token, user);
 
-        Cookie cookie = new Cookie(COOKIE_NAME_TOKEN,token);
+        Cookie cookie = new Cookie(COOKIE_NAME_TOKEN, token);
         cookie.setMaxAge(SecUserKey.token.expireSeconds());
         cookie.setPath("/");
         response.addCookie(cookie);
