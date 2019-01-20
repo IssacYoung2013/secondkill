@@ -7,7 +7,9 @@ import com.issac.seckill.vo.GoodsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -29,11 +31,18 @@ public class GoodsService {
         return goodsDao.getGoodsVoByGoodsId(goodsId);
     }
 
-    public void reduceStock(GoodsVo goods) {
+    public boolean reduceStock(GoodsVo goods) {
 
         SecGoods g = new SecGoods();
         g.setId(goods.getId());
         g.setStockCount(goods.getStockCount() - 1);
-        goodsDao.reduceStock(g);
+        int ret = goodsDao.reduceStock(g);
+        return ret > 0;
+    }
+
+    public void resetStock(List<GoodsVo> goodsVoList) {
+        goodsVoList.forEach(goodsVo -> {
+            goodsDao.resetStock(goodsVo);
+        });
     }
 }

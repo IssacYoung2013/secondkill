@@ -27,4 +27,7 @@ public interface GoodsDao {
 
     @Update("UPDATE sec_goods SET stock_count = stock_count - 1 WHERE goods_id = #{id} and stock_count > 0")
     int reduceStock(SecGoods goods);
+
+    @Update("UPDATE sec_goods SET stock_count = 10 WHERE goods_id = #{id} ")
+    int resetStock(GoodsVo goodsVo);
 }

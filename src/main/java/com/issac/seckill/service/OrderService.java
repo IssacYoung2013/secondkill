@@ -56,7 +56,7 @@ public class OrderService {
         secOrder.setOrderId(orderInfo.getId());
         secOrder.setUserId(user.getId());
 
-        long secOrderId = orderDao.insertSecOrder(secOrder);
+        orderDao.insertSecOrder(secOrder);
 
         redisService.set(OrderKey.getSecOrderByUidGid,""+user.getId()+"_"+goods.getId(),secOrder);
 
@@ -65,5 +65,11 @@ public class OrderService {
 
     public OrderInfo getOrderById(long orderId) {
         return orderDao.getOrderById(orderId);
+    }
+
+    public void deleteOrders() {
+        orderDao.deleteAll();
+        orderDao.deleteAllSecOrder();
+
     }
 }

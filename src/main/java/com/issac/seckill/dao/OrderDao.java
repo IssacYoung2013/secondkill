@@ -31,4 +31,10 @@ public interface OrderDao {
 
     @Select("SELECT * FROM order_info WHERE id = #{orderId}")
     OrderInfo getOrderById(long orderId);
+
+    @Delete("DELETE FROM order_info")
+    void deleteAll();
+
+    @Delete("DELETE FROM sec_order")
+    void deleteAllSecOrder();
 }
