@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Implementation-Title: secondkill
+Implementation-Version: 1.0-SNAPSHOT
+Built-By: Issac
+Implementation-Vendor-Id: com.issac
+Created-By: Apache Maven 3.5.3
+Build-Jdk: 1.8.0_171
+Implementation-URL: https://projects.spring.io/spring-boot/#/spring-bo
+ ot-starter-parent/secondkill
+

@@ -20,4 +20,6 @@ public class SecUserKey extends BasePrefix {
 
     public static SecUserKey token = new SecUserKey(TOKEN_EXPIRE,"tk");
     public static SecUserKey getByName = new SecUserKey("name");
+    public static SecUserKey getById = new SecUserKey("id");
+
 }

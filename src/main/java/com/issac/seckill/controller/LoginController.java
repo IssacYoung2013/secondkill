@@ -34,11 +34,11 @@ public class LoginController {
 
     @RequestMapping(value = "/do_login", method = RequestMethod.POST)
     @ResponseBody
-    public Result doLogin(HttpServletResponse response, @Valid LoginVo loginVo) {
+    public Result<String> doLogin(HttpServletResponse response, @Valid LoginVo loginVo) {
         log.info(loginVo.toString());
 
         // 登录
-        userService.login(response, loginVo);
-        return Result.success(true);
+        String token = userService.login(response, loginVo);
+        return Result.success(token);
     }
 }

@@ -28,4 +28,7 @@ public interface OrderDao {
     @Insert("INSERT INTO sec_order(user_id,goods_id,order_id) VALUES (#{userId},#{goodsId},#{orderId})")
     @SelectKey(keyColumn = "id",keyProperty = "id",resultType = long.class,before = false,statement = "select last_insert_id()")
     long insertSecOrder(SecOrder secOrder);
+
+    @Select("SELECT * FROM order_info WHERE id = #{orderId}")
+    OrderInfo getOrderById(long orderId);
 }

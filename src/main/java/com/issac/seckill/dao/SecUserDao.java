@@ -3,6 +3,7 @@ package com.issac.seckill.dao;
 import com.issac.seckill.domain.SecUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 /**
  *
@@ -16,4 +17,6 @@ public interface SecUserDao {
     @Select("select * from sec_user WHERE id = #{id}")
     SecUser getById(long id);
 
+    @Update("UPDATE sec_user SET password = #{password} WHERE id = #{id}")
+    void update(SecUser toBeUpdate);
 }

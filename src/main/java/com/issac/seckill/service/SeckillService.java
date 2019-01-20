@@ -30,10 +30,7 @@ public class SeckillService {
     public OrderInfo seckill(SecUser user, GoodsVo goods) {
         // 减库存，下订单 写入秒杀订单
         goodsService.reduceStock(goods);
-
         // order_info sec
         return orderService.createOrder(user,goods);
-
-
     }
 }

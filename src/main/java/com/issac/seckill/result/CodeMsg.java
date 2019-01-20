@@ -24,6 +24,10 @@ public class CodeMsg {
     public static CodeMsg MOBILE_NOT_EXISTS = new CodeMsg(500214,"手机号不存在");
     public static CodeMsg PASSWORD_ERROR = new CodeMsg(500215,"密码错误");
 
+
+    // 订单模块 5004xx
+    public static CodeMsg ORDER_NOT_EXIST = new CodeMsg(500401,"订单不存在");
+
     // 秒杀模块 5005xx
     public static CodeMsg SECKILL_OVER = new CodeMsg(500500,"秒杀完");
     public static CodeMsg SECKILL_REPEAT = new CodeMsg(500501,"不能重复秒杀完");

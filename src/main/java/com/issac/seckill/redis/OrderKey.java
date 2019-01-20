@@ -7,7 +7,10 @@ package com.issac.seckill.redis;
  * desc:
  */
 public class OrderKey extends BasePrefix {
-    public OrderKey(int expireSeconds, String prefix) {
-        super(expireSeconds, prefix);
+    public OrderKey(String prefix) {
+        super(prefix);
     }
+
+    public static OrderKey getSecOrderByUidGid = new OrderKey("secug");
+
 }

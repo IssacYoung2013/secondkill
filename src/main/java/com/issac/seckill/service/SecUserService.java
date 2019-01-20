@@ -34,10 +34,43 @@ public class SecUserService {
     RedisService redisService;
 
     public SecUser getById(long id) {
-        return secUserDao.getById(id);
+        // 取缓存
+        SecUser secUser = redisService.get(SecUserKey.getById, "" + id, SecUser.class);
+        if (secUser != null) {
+            return secUser;
+        }
+        // 取数据库
+        secUser = secUserDao.getById(id);
+        if (secUser != null) {
+            redisService.set(SecUserKey.getById, "" + id, secUser);
+        }
+        return secUser;
     }
 
-    public boolean login(HttpServletResponse response, LoginVo loginVo) {
+    public boolean updatePassword(String token, long id, String formPass) {
+
+        // 取user对象
+        SecUser secUser = getById(id);
+        if (secUser == null) {
+            throw new GlobleException(CodeMsg.MOBILE_NOT_EXISTS);
+        }
+
+        // 更新数据库
+        SecUser toBeUpdate = new SecUser();
+        secUser.setId(id);
+        toBeUpdate.setPassword(MD5Util.formPassToDBPass(formPass, secUser.getSalt()));
+        secUserDao.update(toBeUpdate);
+
+        // 处理缓存
+        redisService.delete(SecUserKey.getById, "" + id);
+
+        // 更新token
+        secUser.setPassword(toBeUpdate.getPassword());
+        redisService.set(SecUserKey.token, token, secUser);
+        return true;
+    }
+
+    public String login(HttpServletResponse response, LoginVo loginVo) {
         if (loginVo == null) {
             throw new GlobleException(CodeMsg.ERROR);
         }
@@ -62,7 +95,7 @@ public class SecUserService {
         // 生成cookie
         addCookie(response, token, user);
 
-        return true;
+        return token;
     }
 
     public SecUser getByToken(HttpServletResponse response, String token) {
