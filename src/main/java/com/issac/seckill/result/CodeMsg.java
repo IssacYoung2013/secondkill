@@ -15,6 +15,10 @@ public class CodeMsg {
     public static CodeMsg SUCCESS = new CodeMsg(0,"success");
     public static CodeMsg ERROR = new CodeMsg(500100,"error");
     public static CodeMsg BIND_ERROR = new CodeMsg(500101,"参数校验异常：%s");
+    public static CodeMsg REQUEST_ILEGAL = new CodeMsg(500102,"请求非法");
+    public static CodeMsg ACCESS_LIMI_REACHED = new CodeMsg(500103,"访问太频繁");
+
+
 
     // 登录模块 5002XX
     public static CodeMsg SESSION_ERROR = new CodeMsg(500210,"Session不存在或者已经失效");
@@ -31,6 +35,8 @@ public class CodeMsg {
     // 秒杀模块 5005xx
     public static CodeMsg SECKILL_OVER = new CodeMsg(500500,"秒杀完");
     public static CodeMsg SECKILL_REPEAT = new CodeMsg(500501,"不能重复秒杀完");
+    public static CodeMsg SECKILL_ERROR = new CodeMsg(500502,"秒杀失败");
+
 
 
 

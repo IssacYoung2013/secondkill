@@ -43,10 +43,18 @@
             </td>
             <td>
                 <!--<form id="miaoshaForm" method="post" action="/seckill/do_seckill">-->
-                    <!--<button class="btn btn-primary btn-block" type="submit" id="buyButton">立即秒杀</button>-->
-                    <!--<input type="hidden" name="goodsId" id="goodsId"/>-->
+                <!--<button class="btn btn-primary btn-block" type="submit" id="buyButton">立即秒杀</button>-->
+                <!--<input type="hidden" name="goodsId" id="goodsId"/>-->
                 <!--</form>-->
-                <button class="btn btn-primary btn-block" type="button" id="buyButton" onclick="doSeckill()">立即秒杀</button>
+                <div class="row">
+                    <div class="form-inline">
+                        <img id="verifyCodeImg" width="160" height="32" style="display: none" onclick="refreshVerifyCode()">
+                        <input id="verifyCode" class="form-control" style="display: none" />
+                        <button class="btn btn-primary btn-block" type="button" id="buyButton"
+                                onclick="getSeckillPath()">立即秒杀
+                        </button>
+                    </div>
+                </div>
                 <input type="hidden" name="goodsId" id="goodsId"/>
             </td>
         </tr>
@@ -70,32 +78,63 @@
         // countDown();
         getDetail();
     })
+    
+    function refreshVerifyCode() {
+        $("#verifyCodeImg").attr("src","/seckill/verifyCode?goodsId="+$("#goodsId").val() +
+            "&timestamp=" + new Date().getTime())
+    }
+
+    function getSeckillPath() {
+        var goodsId = $("#goodsId").val();
+        var verifyCode = $("#verifyCode").val();
+        g_showLoading();
+        $.ajax({
+            url: "/seckill/path",
+            type: "get",
+            data: {
+                goodsId: goodsId,
+                verifyCode:verifyCode
+            },
+            success: function (data) {
+                if (data.code == 0) {
+                    var path = data.data;
+                    doSeckill(path);
+                } else {
+                    layer.msg(data.msg);
+                }
+            },
+            error: function () {
+                layer.msg("客户端请求错误");
+            }
+        })
+    }
 
     function getSeckillResult(goodsId) {
         g_showLoading();
         $.ajax({
-            url:"/seckill/result",
-            type:"get",
-            data:{
-                goodsId:goodsId,
+            url: "/seckill/result",
+            type: "get",
+            data: {
+                goodsId: goodsId
             },
-            success:function (data) {
-                if(data.code == 0) {
+            success: function (data) {
+                if (data.code == 0) {
                     var result = data.data;
-                    if(result < 0) {
+                    if (result < 0) {
                         layer.msg("对不起，秒杀失败");
-                    } else if(result == 0) { // 继续轮询
+                    } else if (result == 0) { // 继续轮询
                         setTimeout(function () {
                             getSeckillResult(goodsId);
-                        },50);
+                        }, 50);
 
                     } else {
-                        layer.confirm("恭喜你，秒杀成功！查看订单？",{
-                            btn:["确定","取消"],},
-                            function() {
-                                window.location.href = "/order_detail.htm?orderId="+result;
+                        layer.confirm("恭喜你，秒杀成功！查看订单？", {
+                                btn: ["确定", "取消"],
                             },
-                            function() {
+                            function () {
+                                window.location.href = "/order_detail.htm?orderId=" + result;
+                            },
+                            function () {
                                 layer.closeAll();
                             });
                     }
@@ -103,21 +142,21 @@
                     layer.msg(data.msg);
                 }
             },
-            error:function () {
+            error: function () {
                 layer.msg("客户端请求错误");
             }
         })
     }
 
-    function doSeckill() {
+    function doSeckill(path) {
         $.ajax({
-            url:"/seckill/do_seckill",
-            type:"post",
-            data:{
-                goodsId:$("#goodsId").val(),
+            url: "/seckill/" + path + "/do_seckill",
+            type: "post",
+            data: {
+                goodsId: $("#goodsId").val(),
             },
-            success:function (data) {
-                if(data.code == 0) {
+            success: function (data) {
+                if (data.code == 0) {
                     // window.location.href = "/order_detail.htm?orderId="+data.data.id;
                     // 轮询服务端
                     getSeckillResult($("#goodsId").val());
@@ -125,7 +164,7 @@
                     layer.msg(data.msg);
                 }
             },
-            error:function () {
+            error: function () {
                 layer.msg("客户端请求错误");
             }
         })
@@ -134,16 +173,16 @@
     function getDetail() {
         var goodsId = g_getQueryString("goodsId");
         $.ajax({
-            url:"/goods/detail/"+ goodsId,
-            type:"get",
-            success:function (data) {
-                if(data.code == 0) {
+            url: "/goods/detail/" + goodsId,
+            type: "get",
+            success: function (data) {
+                if (data.code == 0) {
                     render(data.data);
                 } else {
                     layer.msg(data.msg);
                 }
             },
-            error:function () {
+            error: function () {
                 layer.msg("客户端请求错误");
             }
         })
@@ -155,11 +194,11 @@
         var goods = detail.goods;
         var user = detail.user;
 
-        if(user) {
+        if (user) {
             $("#userTip").hide();
         }
         $("#goodsName").text(goods.goodsName);
-        $("#goodsImg").attr("src",goods.goodsImg);
+        $("#goodsImg").attr("src", goods.goodsImg);
         $("#startTime").text(new Date(goods.startDate).format("yyyy-MM-dd hh:mm:ss"));
         $("#remainSeconds").val(remainSeconds);
         $("#goodsId").val(goods.id);
@@ -172,29 +211,34 @@
     function countDown() {
         var remainSeconds = $("#remainSeconds").val();
         var timeout;
-        if(remainSeconds > 0) {
+        if (remainSeconds > 0) {
             // 秒杀还没开始，倒计时
-            $("#buyButton").attr("disabled",true);
+            $("#buyButton").attr("disabled", true);
             $("#seckillTip").html("秒杀倒计时：" + remainSeconds + "秒");
             timeout = setTimeout(function () {
                 $("#countDown").text(remainSeconds - 1);
                 $("#remainSeconds").val(remainSeconds - 1);
                 countDown();
-            },1000);
+            }, 1000);
 
         }
-        else if(remainSeconds == 0) {
+        else if (remainSeconds == 0) {
             // 秒杀进行中
-            $("#buyButton").attr("disabled",false);
-            if(timeout) {
+            $("#buyButton").attr("disabled", false);
+            if (timeout) {
                 clearTimeout(timeout);
             }
             $("#seckillTip").html("秒杀进行中");
+            $("#verifyCodeImg").attr("src","seckill/verifyCode?goodsId="+$("#goodsId").val());
+            $("#verifyCodeImg").show();
+            $("#verifyCode").show();
 
         } else {
             // 秒杀已结束
-            $("#buyButton").attr("disabled",true);
+            $("#buyButton").attr("disabled", true);
             $("#seckillTip").html("秒杀已结束");
+            $("#verifyCodeImg").hide();
+            $("#verifyCode").hide();
         }
     }
 </script>

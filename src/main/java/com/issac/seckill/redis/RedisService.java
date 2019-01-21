@@ -1,6 +1,7 @@
 package com.issac.seckill.redis;
 
 import com.alibaba.fastjson.JSON;
+import com.issac.seckill.domain.SecUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -241,6 +242,5 @@ public class RedisService {
             jedis.close();
         }
     }
-
 
 }

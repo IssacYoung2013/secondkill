@@ -1,5 +1,6 @@
 package com.issac.seckill.config;
 
+import com.issac.seckill.access.UserContext;
 import com.issac.seckill.domain.SecUser;
 import com.issac.seckill.service.SecUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,34 +36,9 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
     }
 
     @Override
-    public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer, NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
-
-        HttpServletRequest request = nativeWebRequest.getNativeRequest(HttpServletRequest.class);
-        HttpServletResponse response = nativeWebRequest.getNativeResponse(HttpServletResponse.class);
-
-        String paramToken = request.getParameter(SecUserService.COOKIE_NAME_TOKEN);
-        String cookieToken = getCookieValue(request,SecUserService.COOKIE_NAME_TOKEN);
-        if(StringUtils.isEmpty(cookieToken) && StringUtils.isEmpty(paramToken)) {
-            return null;
-        }
-        String token = StringUtils.isEmpty(paramToken)?cookieToken:paramToken;
-        
-        return userService.getByToken(response,token);
+    public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer,
+                                  NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
+        return UserContext.getUser();
     }
 
-    private String getCookieValue(HttpServletRequest request, String cookieNameToken) {
-
-        Cookie[] cookies = request.getCookies();
-        if(cookies == null || cookies.length == 0) {
-            return null;
-        }
-        for (Cookie cookie :
-                cookies) {
-            if(cookie.getName().equals(cookieNameToken)) {
-                return cookie.getValue();
-            }
-        }
-
-        return null;
-    }
 }

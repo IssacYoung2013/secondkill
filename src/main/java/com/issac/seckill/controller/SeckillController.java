@@ -1,20 +1,20 @@
 package com.issac.seckill.controller;
 
+import com.issac.seckill.access.AccessLimit;
 import com.issac.seckill.domain.Goods;
 import com.issac.seckill.domain.OrderInfo;
 import com.issac.seckill.domain.SecOrder;
 import com.issac.seckill.domain.SecUser;
 import com.issac.seckill.rabbitmq.MQSender;
 import com.issac.seckill.rabbitmq.SeckillMessage;
-import com.issac.seckill.redis.GoodsKey;
-import com.issac.seckill.redis.OrderKey;
-import com.issac.seckill.redis.RedisService;
-import com.issac.seckill.redis.SeckillKey;
+import com.issac.seckill.redis.*;
 import com.issac.seckill.result.CodeMsg;
 import com.issac.seckill.result.Result;
 import com.issac.seckill.service.GoodsService;
 import com.issac.seckill.service.OrderService;
 import com.issac.seckill.service.SeckillService;
+import com.issac.seckill.util.MD5Util;
+import com.issac.seckill.util.UUIDUtil;
 import com.issac.seckill.vo.GoodsVo;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.imageio.ImageIO;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.awt.image.BufferedImage;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,10 +85,11 @@ public class SeckillController implements InitializingBean {
      * @param goodsId
      * @return
      */
-    @PostMapping("/do_seckill")
+    @PostMapping("/{path}/do_seckill")
     @ResponseBody
     public Result doSeckill(Model model, SecUser user,
-                            @RequestParam("goodsId") long goodsId) {
+                            @RequestParam("goodsId") long goodsId,
+                            @PathVariable("path") String path) {
         model.addAttribute("user", user);
         if (user == null) {
             return Result.error(CodeMsg.SESSION_ERROR);
@@ -105,6 +111,11 @@ public class SeckillController implements InitializingBean {
 //        model.addAttribute("goods",goods);
 //        return Result.success(orderInfo);
 
+        // 验证path
+        boolean ret = seckillService.checkPath(user,goodsId,path);
+        if(!ret) {
+            return Result.error(CodeMsg.REQUEST_ILEGAL);
+        }
         // 内存标记，减少Redis访问
         boolean over = localOverMap.get(goodsId);
         if (over) {
@@ -142,6 +153,7 @@ public class SeckillController implements InitializingBean {
      * @param goodsId
      * @return
      */
+    @AccessLimit(seconds = 5,maxCount =10,needLogin = true)
     @GetMapping("/result")
     @ResponseBody
     public Result seckillResult(Model model, SecUser user,
@@ -170,5 +182,58 @@ public class SeckillController implements InitializingBean {
         redisService.delete(SeckillKey.isGoodsOver);
         seckillService.reset(goodsVoList);
         return Result.success(true);
+    }
+
+    @AccessLimit(seconds = 5,maxCount =5,needLogin = true)
+    @GetMapping("/path")
+    @ResponseBody
+    public Result path(Model model,SecUser user     ,
+                       HttpServletRequest request,
+                       @RequestParam("goodsId") long goodsId,
+                       @RequestParam(value = "verifyCode",required = false,defaultValue = "0") int verifyCode) {
+        model.addAttribute("user", user);
+        if (user == null) {
+            return Result.error(CodeMsg.SESSION_ERROR);
+        }
+        // 查询访问次数，5秒钟访问5次
+        String uri = request.getRequestURI();
+        String key = uri + "_" + user.getId();
+        Integer count = redisService.get(AccessKey.access,key,Integer.class);
+        if(count == null) {
+            redisService.set(AccessKey.access,key,1);
+        } else if(count < 5){
+            redisService.incr(AccessKey.access,key);
+        } else {
+            return Result.error(CodeMsg.ACCESS_LIMI_REACHED);
+        }
+        boolean check =seckillService.checkVerifyCode(user,goodsId,verifyCode);
+        if(!check) {
+            return Result.error(CodeMsg.REQUEST_ILEGAL);
+
+        }
+        String path = seckillService.createSeckillPath(user,goodsId);
+        return Result.success(path);
+    }
+
+    @GetMapping("/verifyCode")
+    @ResponseBody
+    public Result getSeckillVerifyCode(HttpServletResponse response, Model model, SecUser user     ,
+                                       @RequestParam("goodsId") long goodsId) {
+        model.addAttribute("user", user);
+        if (user == null) {
+            return Result.error(CodeMsg.SESSION_ERROR);
+        }
+        BufferedImage image = seckillService.createVerifyCode(user,goodsId);
+        try {
+            OutputStream out = response.getOutputStream();
+            ImageIO.write(image,"JPEG",out);
+            out.flush();
+            out.close();
+            return null;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return Result.error(CodeMsg.SESSION_ERROR);
+        }
     }
 }
